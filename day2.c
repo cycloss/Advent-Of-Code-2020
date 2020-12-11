@@ -12,11 +12,20 @@ typedef struct {
     char keyChar, *pass;
 } cleanPassLine;
 
-bool testPassword(char* password);
+bool testPasswordOne(char* password);
+bool testPasswordTwo(char* password);
 cleanPassLine* generateCpl(char* passLine);
 char* getMatch(int index, regmatch_t* matches, char* passLine);
+void runTest();
 
 int main() {
+    puts("Part one:");
+    runTest(testPasswordOne);
+    puts("\nPart two:");
+    runTest(testPasswordTwo);
+}
+
+void runTest(bool (*testPassword)(char*)) {
 
     FILE* inputFile = fopen(INPUT_FILE_2, "r");
 
@@ -32,7 +41,7 @@ int main() {
     fclose(inputFile);
 }
 
-bool testPassword(char* passwordLine) {
+bool testPasswordOne(char* passwordLine) {
     cleanPassLine* cpl = generateCpl(passwordLine);
     if (!cpl) {
         printf("Failed to parse line: %s", passwordLine);
@@ -51,6 +60,28 @@ bool testPassword(char* passwordLine) {
     free(cpl->pass);
     free(cpl);
     return ok;
+}
+
+bool testPasswordTwo(char* passwordLine) {
+    cleanPassLine* cpl = generateCpl(passwordLine);
+    if (!cpl) {
+        printf("Failed to parse line: %s", passwordLine);
+        exit(1);
+    }
+
+    int correctPos = 0;
+
+    char* copyP = cpl->pass - 1;
+    if (*(copyP + cpl->min) == cpl->keyChar) {
+        correctPos++;
+    }
+    if (*(copyP + cpl->max) == cpl->keyChar) {
+        correctPos++;
+    }
+
+    free(cpl->pass);
+    free(cpl);
+    return correctPos == 1;
 }
 
 cleanPassLine* generateCpl(char* passLine) {
