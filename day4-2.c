@@ -1,6 +1,6 @@
 //second version, more robust but more complicated
-
 #include <arrayList.h>
+#include <hashTable.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +25,7 @@ arrayList* getPassports() {
     for (char c = fgetc(in); lastChar != EOF; c = fgetc(in)) {
         if (c == '\n' && lastChar == '\n' || c == EOF) {
             buffer[buffInd] = '\0';
-            append(al, buffer);
+            appendToAl(al, buffer);
             buffer = malloc(sizeof(char) * 100);
             buffInd = 0;
         } else if (c == ' ' || c == '\n') {
@@ -40,8 +40,6 @@ arrayList* getPassports() {
     return al;
 }
 
-char* codes[] = { "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid" };
-
 bool checkPpv(ppValidator* ppvp) {
     for (int i = 0; i < 7; i++) {
         if (!((bool*)ppvp)[i]) {
@@ -52,8 +50,8 @@ bool checkPpv(ppValidator* ppvp) {
 }
 
 bool partTwo = false;
-// hashTable* ht;
-char* eyeColours[] = { "amb", "blu", "brn", "gry", "grn", "hzl", "oth" };
+hashTable* eyeColorTable;
+char* codes[] = { "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid" };
 
 void processSection(char* section, ppValidator* ppvp) {
     section[3] = '\0';
@@ -113,13 +111,7 @@ void processSection(char* section, ppValidator* ppvp) {
     } else if (strcmp(section, codes[5]) == 0) {
         if (partTwo) {
             section += 4;
-            bool eyeOk = false;
-            for (int i = 0; i < len(eyeColours); i++) {
-                if (strcmp(section, eyeColours[i]) == 0) {
-                    eyeOk = true;
-                }
-            }
-            eyeOk ? ppvp->eclOk = true : false;
+            ppvp->eclOk = tableContains(eyeColorTable, section);
         } else {
             ppvp->eclOk = true;
         }
@@ -165,11 +157,13 @@ int main() {
     arrayList* al = getPassports();
     printf("Passport count: %d\n", getSize(al));
     printf("Part one valid passports: %d\n", getValidPassports(al));
-    freeList(al, true);
+    freeAl(al, true);
 
     partTwo = true;
-
+    eyeColorTable = createHashTable(hashString, stringComparator);
+    addTableItems(eyeColorTable, 7, "amb", "blu", "brn", "gry", "grn", "hzl", "oth");
     arrayList* al2 = getPassports();
     printf("Part two valid passports: %d\n", getValidPassports(al2));
-    freeList(al2, true);
+    freeAl(al2, true);
+    freeTable(eyeColorTable, false);
 }
