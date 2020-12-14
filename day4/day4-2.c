@@ -1,12 +1,10 @@
-//second version, more robust but more complicated
+//second version, more robust but more complicated, uses custom hashtable that can be found in my github repos
 #include <arrayList.h>
 #include <hashTable.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define len(x) sizeof(x) / sizeof(x[0])
 
 typedef struct {
     bool byrOk, iyrOk, eyrOk, hgtOk, hclOk, eclOk, pidOk;
@@ -160,7 +158,7 @@ int main() {
     freeAl(al, true);
 
     partTwo = true;
-    eyeColorTable = createHashTable(hashString, stringComparator);
+    eyeColorTable = createHashTable(strHash, strComp);
     addTableItems(eyeColorTable, 7, "amb", "blu", "brn", "gry", "grn", "hzl", "oth");
     arrayList* al2 = getPassports();
     printf("Part two valid passports: %d\n", getValidPassports(al2));
