@@ -123,16 +123,20 @@ bool canContainGoldBag(char* bagName) {
     }
 
     //keeps going recursing until finds bag with no more bags
-    for (int i = 0; getSize(currentBagList); i++) {
+    bool found = false;
+    for (int i = 0; i < getSize(currentBagList); i++) {
         bag* bag = getItemAt(currentBagList, i);
         if (strcmp("shiny gold", bag->color) == 0) {
             printf("Found shiny gold in: %s\n", bagName);
             return true;
         } else {
-            return canContainGoldBag(bag->color);
+            if (canContainGoldBag(bag->color)) {
+                found = true;
+                break;
+            };
         }
     }
-    return false;
+    return found;
 }
 
 int getShinyGoldCarrierCount() {
@@ -140,6 +144,7 @@ int getShinyGoldCarrierCount() {
 
     for (int i = 0; i < getSize(bagList); i++) {
         char* bagName = getItemAt(bagList, i);
+        printf("Searching bag: %s\n", bagName);
         if (canContainGoldBag(bagName)) {
             count++;
         }
@@ -149,7 +154,7 @@ int getShinyGoldCarrierCount() {
 
 int main() {
 
-    FILE* in = fopen("day7sample2.txt", "r");
+    FILE* in = fopen("day7.txt", "r");
 
     bagMap = createHashMap(strHash, strComp);
     bagList = createArrayList();
@@ -162,7 +167,7 @@ int main() {
     iterateListItems(bagList, strPrinter);
 
     int shinyGoldCarrierCount = getShinyGoldCarrierCount();
-    printf("Can contain gold bag: %i", shinyGoldCarrierCount);
+    printf("Part 1: Can contain at least one gold bag: %i", shinyGoldCarrierCount);
     //TODO severe memory leak as map not being properly free as is only freeing array list and not also the values in the array list
     freeMap(bagMap, true);
     freeAl(bagList, false);
