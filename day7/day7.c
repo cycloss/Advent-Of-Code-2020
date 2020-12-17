@@ -51,6 +51,7 @@ char* getBagName(char** line) {
     matchStr[len] = '\0';
     memcpy(matchStr, *line + nameMatch.rm_so, len);
     (*line) += fullLen;
+    regfree(&reg);
     return matchStr;
 }
 
@@ -62,24 +63,28 @@ bag* getNextBag(char** line) {
     regmatch_t matches[matchCount];
 
     if (regcomp(&reg, enclosedBagReg, REG_EXTENDED) || regexec(&reg, *line, matchCount, matches, 0)) {
+        regfree(&reg);
         return NULL;
     }
 
     bag* currentBag = malloc(sizeof(bag));
 
     for (int i = 1;; i++) {
+
         regmatch_t match = matches[i];
-        int len = match.rm_eo - match.rm_so;
-        char* matchStr = malloc(sizeof(char) * len + 1);
-        matchStr[len] = '\0';
-        memcpy(matchStr, *line + match.rm_so, len);
 
         if (match.rm_so == -1) {
             break;
         }
 
+        int len = match.rm_eo - match.rm_so;
+        char* matchStr = malloc(sizeof(char) * len + 1);
+        matchStr[len] = '\0';
+        memcpy(matchStr, *line + match.rm_so, len);
+
         if (i == 1) {
             currentBag->count = atoi(matchStr);
+            free(matchStr);
         } else if (i == 2) {
             currentBag->color = matchStr;
             regmatch_t fullMatch = matches[0];
@@ -91,7 +96,7 @@ bag* getNextBag(char** line) {
             exit(1);
         }
     }
-
+    regfree(&reg);
     return currentBag;
 }
 
@@ -152,6 +157,25 @@ int getShinyGoldCarrierCount() {
     return count;
 }
 
+void freeBag(void* bagp) {
+    bag* b = (bag*)bagp;
+    free(b->color);
+    free(b);
+}
+
+void freeMapPair(keyValPair* kvpp) {
+    char* key = kvpp->key;
+    arrayList* l = kvpp->val;
+    iterateListItems(l, freeBag);
+    freeAl(l, false);
+    free(key);
+}
+
+void freeBagMap() {
+    iterateMapPairs(bagMap, freeMapPair);
+    freeMap(bagMap, false);
+}
+
 int main() {
 
     FILE* in = fopen("day7.txt", "r");
@@ -162,14 +186,13 @@ int main() {
     for (char buff[BUFF_SIZE], *p = fgets(buff, BUFF_SIZE, in); p; p = fgets(buff, BUFF_SIZE, in)) {
         parseLine(buff);
     }
-    printMapPairs(bagMap, bagKvpPrinter);
+    iterateMapPairs(bagMap, bagKvpPrinter);
     puts("Rules:");
     iterateListItems(bagList, strPrinter);
 
     int shinyGoldCarrierCount = getShinyGoldCarrierCount();
     printf("Part 1: Can contain at least one gold bag: %i", shinyGoldCarrierCount);
-    //TODO severe memory leak as map not being properly free as is only freeing array list and not also the values in the array list
-    freeMap(bagMap, true);
+    freeBagMap();
     freeAl(bagList, false);
     fclose(in);
 }
