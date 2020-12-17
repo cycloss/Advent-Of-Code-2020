@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFF_SIZE 150
+#define BUFF_SIZE 200
 #define WORD [a - z] +
 
 typedef struct {
@@ -15,6 +15,7 @@ typedef struct {
 } bag;
 
 hashMap* bagMap;
+arrayList* bagList;
 
 void bagKvpPrinter(keyValPair* kvpp) {
     printf("[%s : ", (char*)kvpp->key);
@@ -23,6 +24,10 @@ void bagKvpPrinter(keyValPair* kvpp) {
         printf("(%i %s), ", bagp->count, bagp->color);
     }
     printf("]\n");
+}
+
+void strPrinter(void* str) {
+    puts((char*)str);
 }
 
 char* getBagName(char** line) {
@@ -57,7 +62,6 @@ bag* getNextBag(char** line) {
     regmatch_t matches[matchCount];
 
     if (regcomp(&reg, enclosedBagReg, REG_EXTENDED) || regexec(&reg, *line, matchCount, matches, 0)) {
-        puts("Failed to execute enclosing bag regex");
         return NULL;
     }
 
@@ -78,7 +82,9 @@ bag* getNextBag(char** line) {
             currentBag->count = atoi(matchStr);
         } else if (i == 2) {
             currentBag->color = matchStr;
-            (*line) += len;
+            regmatch_t fullMatch = matches[0];
+            int fullLen = fullMatch.rm_eo - fullMatch.rm_so;
+            (*line) += fullLen;
         } else {
             puts("Too many matches in bag match");
             puts(matchStr);
@@ -102,23 +108,63 @@ void parseLine(char* line) {
 
     char* bagKey = getBagName(&line);
     arrayList* enclosedBags = getEnclosedBags(line);
-    char* regex = "^([a-z]+ [a-z]+) [a-z]+ [a-z]+ ([1-9]+ )?([a-z]+ [a-z]+)? bags?[,. ]?";
 
+    appendToAl(bagList, bagKey);
     addToMap(bagMap, bagKey, enclosedBags, true);
+}
+
+bool canContainGoldBag(char* bagName) {
+    arrayList* currentBagList = (arrayList*)getValueForKey(bagMap, bagName);
+
+    if (!currentBagList) {
+        //no match found in map
+        printf("No match found for %s\n", bagName);
+        return false;
+    }
+
+    //keeps going recursing until finds bag with no more bags
+    for (int i = 0; getSize(currentBagList); i++) {
+        bag* bag = getItemAt(currentBagList, i);
+        if (strcmp("shiny gold", bag->color) == 0) {
+            printf("Found shiny gold in: %s\n", bagName);
+            return true;
+        } else {
+            return canContainGoldBag(bag->color);
+        }
+    }
+    return false;
+}
+
+int getShinyGoldCarrierCount() {
+    int count = 0;
+
+    for (int i = 0; i < getSize(bagList); i++) {
+        char* bagName = getItemAt(bagList, i);
+        if (canContainGoldBag(bagName)) {
+            count++;
+        }
+    }
+    return count;
 }
 
 int main() {
 
-    FILE* in = fopen("day7sample.txt", "r");
+    FILE* in = fopen("day7sample2.txt", "r");
 
     bagMap = createHashMap(strHash, strComp);
+    bagList = createArrayList();
 
-    for (char buff[BUFF_SIZE], *p = fgets(buff, BUFF_SIZE, in);; p = fgets(buff, BUFF_SIZE, in)) {
-        puts(buff);
+    for (char buff[BUFF_SIZE], *p = fgets(buff, BUFF_SIZE, in); p; p = fgets(buff, BUFF_SIZE, in)) {
         parseLine(buff);
-        if (!p) {
-            break;
-        }
     }
     printMapPairs(bagMap, bagKvpPrinter);
+    puts("Rules:");
+    iterateListItems(bagList, strPrinter);
+
+    int shinyGoldCarrierCount = getShinyGoldCarrierCount();
+    printf("Can contain gold bag: %i", shinyGoldCarrierCount);
+    //TODO severe memory leak as map not being properly free as is only freeing array list and not also the values in the array list
+    freeMap(bagMap, true);
+    freeAl(bagList, false);
+    fclose(in);
 }

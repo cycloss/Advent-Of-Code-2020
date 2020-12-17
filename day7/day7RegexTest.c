@@ -34,7 +34,7 @@ void match(char* line, char* regex) {
 }
 
 int main() {
-    char* line = "vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.";
+    char* line = "shiny salmon bags contain 5 faded indigo bags, 3 bright turquoise bags, 3 pale violet bags, 4 dotted coral bags.";
     char* regex = "^([a-z]+ [a-z]+)";
     match(line, regex);
     char* regex2 = "(([1-9]+) ([a-z]+ [a-z]+) bags?[ .,]?[ ]?)(([1-9]+) ([a-z]+ [a-z]+) bags?[ .,]?[ ]?)?";
