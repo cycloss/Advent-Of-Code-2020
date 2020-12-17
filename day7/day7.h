@@ -17,3 +17,5 @@ bag* getNextBag(char** line);
 void freeBag(void* bagp);
 void freeMapPair(keyValPair* kvpp);
 void freeBagMap();
+
+int findBagsWithinBag(char* bagName, int multiplier);

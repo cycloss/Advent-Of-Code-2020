@@ -15,10 +15,8 @@ arrayList* getEnclosedBags(char* line) {
 }
 
 void parseLine(char* line) {
-
     char* bagKey = getBagName(&line);
     arrayList* enclosedBags = getEnclosedBags(line);
-
     appendToAl(bagList, bagKey);
     addToMap(bagMap, bagKey, enclosedBags, true);
 }
@@ -32,12 +30,10 @@ bool canContainGoldBag(char* bagName) {
         return false;
     }
 
-    //keeps going recursing until finds bag with no more bags
     bool found = false;
     for (int i = 0; i < getSize(currentBagList); i++) {
         bag* bag = getItemAt(currentBagList, i);
         if (strcmp("shiny gold", bag->color) == 0) {
-            printf("Found shiny gold in: %s\n", bagName);
             return true;
         } else {
             if (canContainGoldBag(bag->color)) {
@@ -54,7 +50,6 @@ int getShinyGoldCarrierCount() {
 
     for (int i = 0; i < getSize(bagList); i++) {
         char* bagName = getItemAt(bagList, i);
-        printf("Searching bag: %s\n", bagName);
         if (canContainGoldBag(bagName)) {
             count++;
         }
@@ -72,12 +67,15 @@ int main() {
     for (char buff[BUFF_SIZE], *p = fgets(buff, BUFF_SIZE, in); p; p = fgets(buff, BUFF_SIZE, in)) {
         parseLine(buff);
     }
-    iterateMapPairs(bagMap, bagKvpPrinter);
-    puts("Rules:");
-    iterateListItems(bagList, strPrinter);
+    // iterateMapPairs(bagMap, bagKvpPrinter);
+    // puts("Rules:");
+    // iterateListItems(bagList, strPrinter);
 
     int shinyGoldCarrierCount = getShinyGoldCarrierCount();
-    printf("Part 1: Can contain at least one gold bag: %i", shinyGoldCarrierCount);
+    printf("Part 1: Bags that can eventually contain at least one shiny gold bag: %i\n", shinyGoldCarrierCount);
+    int bagsWithinShinyGold = findBagsWithinBag("shiny gold", 1);
+    printf("Part 2: Bags within shiny gold bag: %i", bagsWithinShinyGold);
+
     freeBagMap();
     freeAl(bagList, false);
     fclose(in);
